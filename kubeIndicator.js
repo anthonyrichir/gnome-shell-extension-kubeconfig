@@ -6,13 +6,13 @@ const Clutter = imports.gi.Clutter;
 const GLib = imports.gi.GLib;
 const Gio = imports.gi.Gio;
 const Shell = imports.gi.Shell;
-const ByteArray = imports.byteArray;
 
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const KubePopupMenuItem = Me.imports.kubePopupMenuItem;
 const Convenience = Me.imports.lib.convenience;
+const yaml = Me.imports.lib.yaml;
 
-var KubeIndicator = new Lang.Class({
+const KubeIndicator = new Lang.Class({
     Name: "Kube",
     Extends: PanelMenu.Button,
 
@@ -41,27 +41,30 @@ var KubeIndicator = new Lang.Class({
     _update: function() {
         this.menu.removeAll()
         try {
-            let contents = ByteArray.toString(GLib.file_get_contents(this.kcPath)[1]);
-            let re = new RegExp('current-context:\\s(.+)','gm');
-            let match = re.exec(contents);
-            let currentContext = '';
-            if (match != null){
-                currentContext = match[1];
-                if ( this._settings.get_boolean('show-current-context') == true ){
-                    this.label.text = currentContext;
-                }
-            }
+            let contents = String(GLib.file_get_contents(this.kcPath)[1]);
+            var kubeConfigObject = jsyaml.load( contents );
 
-            re = new RegExp('-\\scontext:\\n.*\\n.*\\n.*\\n.*name:\\s(.*)','gm');
-            match = re.exec(contents);
-            while (match != null) {
+            var names = [];
+            for (var i=0; i < kubeConfigObject.contexts.length; i++) {
+                global.log('Element name: ' + kubeConfigObject.contexts[i].name);
+                names.push(kubeConfigObject.contexts[i].name);
+            };
+            global.log('Names.length: ' + names.length);
+            global.log('Current context: ' + kubeConfigObject['current-context']);
+
+            const currentContext = kubeConfigObject['current-context'];
+            if (currentContext && this._settings.get_boolean('show-current-context') == true ){
+                this.label.text = currentContext;
+            }
+            
+            for (var i=0; i < names.length; i++) {
                 let curr = false;
-                if (match[1]==currentContext){
+                if (names[i]==currentContext){
                     curr = true;
                 }
-                this.menu.addMenuItem(new KubePopupMenuItem.KubePopupMenuItem(match[1],curr));         
-                match = re.exec(contents);
-            }
+                global.log('Menu item: ' + names[i]);
+                this.menu.addMenuItem(new KubePopupMenuItem.KubePopupMenuItem(names[i],curr));
+            };
 
             // add seperator to popup menu
             this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
@@ -85,6 +88,7 @@ var KubeIndicator = new Lang.Class({
 
     _setView: function() {
         this.actor.remove_all_children();
+        log('gnome-shell-extension-kubeconfig',"_setView");
         if ( this._settings.get_boolean('show-current-context') == false ){
             this.icon = new St.Icon({
                 icon_name: 'logo',
