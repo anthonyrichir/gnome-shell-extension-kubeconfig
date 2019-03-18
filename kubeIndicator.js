@@ -52,7 +52,7 @@ var KubeIndicator = new Lang.Class({
                 }
             }
 
-            re = new RegExp('-\\scontext:\\n.*\\n.*\\n.*name:\\s(.*)','gm');
+            re = new RegExp('-\\scontext:\\n.*\\n.*\\n.*\\n.*name:\\s(.*)','gm');
             match = re.exec(contents);
             while (match != null) {
                 let curr = false;
