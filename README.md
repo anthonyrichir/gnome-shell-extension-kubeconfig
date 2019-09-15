@@ -7,7 +7,7 @@ See [this guide](https://itsfoss.com/gnome-shell-extensions/) for inspiration.
 Tested working on Ubuntu 18.04.3 LTS with Gnome 2.28.2
 
 ```bash
-# just copy and paste this into your terminal line by line
+# tl;dr just copy and paste this into your terminal
 # essentially just clone into your extension directory and then
 # modify manifest.js to match the original fork's uuid of the extension
 
